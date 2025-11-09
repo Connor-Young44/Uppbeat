@@ -4,7 +4,8 @@ public class Track
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Name { get; set; } = null!;
-    public Guid ArtistId { get; set; }     // FK to User.Id
+    public Guid ArtistId { get; set; }
+    public User? Owner { get; set; }
     public int DurationSeconds { get; set; }
     public string FilePath { get; set; } = null!;  // filename or blob id
     public List<TrackGenre> Genres { get; set; } = new();

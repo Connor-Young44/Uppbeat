@@ -1,11 +1,10 @@
 ﻿namespace Uppbeat.Api.DTOs;
 
-public class TrackDto
+public class TrackCreateDto
 {
-    public Guid Id { get; set; }
     public string Name { get; set; } = null!;
-    public Guid ArtistId { get; set; }
-    public int DurationSeconds { get; set; }
+    public string ArtistId { get; set; } = null!;
     public string FilePath { get; set; } = null!;
+    public int DurationSeconds { get; set; }
     public List<string> Genres { get; set; } = new();
 }

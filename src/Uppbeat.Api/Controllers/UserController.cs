@@ -27,7 +27,7 @@ public class UserController(IUserService userService) : ControllerBase
     }
 
     [HttpPost]
-    [AllowAnonymous]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<UserReadDto>> Create(UserCreateDto dto)
     {
         var created = await userService.CreateAsync(dto);

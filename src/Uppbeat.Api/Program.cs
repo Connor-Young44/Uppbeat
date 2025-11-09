@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Uppbeat.Api.Data;
 using Uppbeat.Api.Interfaces;
 using Uppbeat.Api.Services;
@@ -17,7 +18,36 @@ var jwtAudience = config["Jwt:Audience"]!;
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Uppbeat API", Version = "v1" });
+
+    // 🔐 Add JWT Bearer Auth to Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter 'Bearer' [space] and then your valid JWT token.\n\nExample: `Bearer eyJhbGciOi...`"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 // Add DbContext (using SQLite, PostgreSQL, or SQL Server depending on what you want)
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -42,7 +72,8 @@ builder.Services.AddAuthentication(options => {
 builder.Services.AddAuthorization();
 // register services for DI
 builder.Services.AddScoped<IUserService, UserService>();
-
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITrackService, TrackService>();
 
 
 var app = builder.Build();
@@ -62,8 +93,7 @@ app.UseAuthorization();
 
 using(var scope = app.Services.CreateScope()){
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    // db.Database.Migrate();
-    // call seeder
+    db.Database.Migrate();
 }
 
 app.MapControllers();
