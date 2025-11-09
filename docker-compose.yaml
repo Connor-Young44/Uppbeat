@@ -1,0 +1,30 @@
+﻿version: '3.8'
+services:
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=uppbeat
+      - POSTGRES_PASSWORD=uppbeat_pass
+      - POSTGRES_DB=uppbeatdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - ConnectionStrings__Default=Host=db;Database=uppbeatdb;Username=uppbeat;Password=uppbeat_pass
+      - Jwt__Key=${JWT_KEY}       # set in env or .env
+      - Jwt__Issuer=Uppbeat
+      - Jwt__Audience=UppbeatUsers
+      - Jwt__ExpiryMinutes=60
+    ports:
+      - "5000:80"
+    depends_on:
+      - db
+
+volumes:
+  pgdata:

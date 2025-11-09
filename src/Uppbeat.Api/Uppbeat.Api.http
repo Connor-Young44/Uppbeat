@@ -1,0 +1,6 @@
+@Uppbeat.Api_HostAddress = http://localhost:5086
+
+GET {{Uppbeat.Api_HostAddress}}/api/User/
+Accept: application/json
+
+###
