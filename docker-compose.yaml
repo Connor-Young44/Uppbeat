@@ -1,30 +1,56 @@
-﻿version: '3.8'
+version: '3.9'
+
 services:
   db:
-    image: postgres:15
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: uppbeat_db
     environment:
-      - POSTGRES_USER=uppbeat
-      - POSTGRES_PASSWORD=uppbeat_pass
-      - POSTGRES_DB=uppbeatdb
+      SA_PASSWORD: "YourStrong!Passw0rd"
+      ACCEPT_EULA: "Y"
     ports:
-      - "5432:5432"
+      - "1433:1433"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - uppbeat_data:/var/opt/mssql
+    healthcheck:
+      test: [ "CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong!Passw0rd -Q 'SELECT 1' || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 30
+      start_period: 90s
+    networks:
+      - uppbeat_net
 
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
+    deploy:
+      replicas: 3
+    restart: unless-stopped
     environment:
-      - ConnectionStrings__Default=Host=db;Database=uppbeatdb;Username=uppbeat;Password=uppbeat_pass
-      - Jwt__Key=${JWT_KEY}       # set in env or .env
-      - Jwt__Issuer=Uppbeat
-      - Jwt__Audience=UppbeatUsers
-      - Jwt__ExpiryMinutes=60
-    ports:
-      - "5000:80"
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Server=db,1433;Database=Uppbeat;User Id=sa;Password=YourStrong!Passw0rd;Encrypt=False;TrustServerCertificate=True
+      Jwt__Key: "YourSuperSecretKeyHere_ChangeMe_ToAtLeast32Chars"
+      Jwt__Issuer: "Uppbeat"
+      Jwt__Audience: "UppbeatUsers"
     depends_on:
-      - db
+      db:
+        condition: service_started
+    networks:
+      - uppbeat_net
+        
+  nginx:
+    image: nginx:stable
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+    networks:
+      - uppbeat_net
 
 volumes:
-  pgdata:
+  uppbeat_data:
+    
+networks:
+  uppbeat_net:
+    driver: bridge
