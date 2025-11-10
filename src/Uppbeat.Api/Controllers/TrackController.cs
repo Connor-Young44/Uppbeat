@@ -81,4 +81,29 @@ public class TracksController : ControllerBase
             return Forbid();
         }
     }
+    [HttpGet("{id}/download")]
+    [Authorize(Roles = "User,Artist,Admin")]
+    public async Task<IActionResult> Download(Guid id)
+    {
+        var track = await _service.GetByIdAsync(id);
+        if (track == null) return NotFound();
+
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var role = User.FindFirstValue(ClaimTypes.Role);
+
+        if (string.IsNullOrEmpty(userIdClaim) || string.IsNullOrEmpty(role))
+        {
+            return Forbid("You must be signed in to download tracks.");
+        }
+
+        var filePath = track.FilePath;
+        if (!System.IO.File.Exists(filePath))
+            return NotFound("Track file not found.");
+
+        var fileName = System.IO.Path.GetFileName(filePath);
+        var contentType = "audio/mpeg"; // MP3?
+        var bytes = await System.IO.File.ReadAllBytesAsync(filePath);
+
+        return File(bytes, contentType, fileName);
+    }
 }

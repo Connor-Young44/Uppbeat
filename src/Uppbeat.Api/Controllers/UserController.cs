@@ -18,7 +18,7 @@ public class UserController(IUserService userService) : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    [AllowAnonymous]
+    [Authorize(Roles = "User,Admin")]
     public async Task<ActionResult<UserReadDto>> GetById(Guid id)
     {
         var user = await userService.GetByIdAsync(id);

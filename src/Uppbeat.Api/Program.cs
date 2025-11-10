@@ -8,6 +8,12 @@ using Uppbeat.Api.Interfaces;
 using Uppbeat.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(5000); // expose to Docker network
+});
+
 var config = builder.Configuration;
 
 // jwt auth setup
@@ -22,7 +28,6 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Uppbeat API", Version = "v1" });
 
-    // 🔐 Add JWT Bearer Auth to Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -48,10 +53,9 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
-
-// Add DbContext (using SQLite, PostgreSQL, or SQL Server depending on what you want)
+// DB Configuration
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(config.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(config.GetConnectionString("DefaultConnection")));
 
 // Authentication & Authorization
 builder.Services.AddAuthentication(options => {
@@ -86,14 +90,35 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     
 }
+// Swagger enabled for all environments to allow easy testing of assignment
+// this would normally only be enabled for dev as above
+app.MapOpenApi();
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-using(var scope = app.Services.CreateScope()){
+using (var scope = app.Services.CreateScope())
+{
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+    var retries = 10;
+
+    while (retries > 0)
+    {
+        try
+        {
+            db.Database.Migrate();
+            break;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"DB migrate failed: {ex.Message}. Retrying...");
+            Thread.Sleep(5000);
+            retries--;
+        }
+    }
 }
 
 app.MapControllers();

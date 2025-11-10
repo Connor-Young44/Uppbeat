@@ -37,7 +37,7 @@ public class TrackService : ITrackService
     {
         var track = await _db.Tracks
             .Include(t => t.Genres)
-            .Include(t => t.ArtistId)
+            .Include(t => t.Owner)
             .FirstOrDefaultAsync(t => t.Id == id);
 
         if (track == null) return null;
