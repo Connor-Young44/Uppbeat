@@ -8,7 +8,7 @@ Uppbeat is a small REST API for managing music tracks, users, and authentication
 
 - User registration and JWT-based authentication
 - CRUD operations for music tracks, including genres and ownership
-- SQL Server for production and SQLite database with EF Core migrations
+- SQL Server with EF Core migrations
 - Swagger UI with JWT Bearer support for testing secured endpoints
 - Tests in seperate project using xUnit and Moq 
 
@@ -22,7 +22,7 @@ dotnet test
 
 - [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 - dotnet CLI
-- (Optional) SQLite viewer for inspecting the database
+- docker
 
 ---
 
