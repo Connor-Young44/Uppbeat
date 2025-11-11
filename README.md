@@ -1,6 +1,6 @@
 ﻿# Uppbeat API
 
-Uppbeat is a small REST API for managing music tracks, users, and authentication. Built with **ASP.NET Core 9**, **Entity Framework Core**, and **SQLite**, it includes **JWT authentication** and **Swagger UI** for exploring and testing the API.
+Uppbeat is a small REST API for managing music tracks, users, and authentication. Built with **ASP.NET Core 9**, **Entity Framework Core**, and **SQL Server**, it includes **JWT authentication** and **Swagger UI** for exploring and testing the API.
 
 ---
 
